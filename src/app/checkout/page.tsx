@@ -1,14 +1,21 @@
-'use client'
+"use client";
 
 import { load } from "@cashfreepayments/cashfree-js";
 import axios from "axios";
 import { useEffect, useState } from "react";
 
+// Define SDK type to avoid `any`
+type CashfreeSDK = {
+  checkout: (options: {
+    paymentSessionId: string;
+    redirectTarget: string;
+  }) => void;
+};
+
 function Checkout() {
   const [sessionId, setSessionId] = useState("");
-  const [cashfree, setCashfree] = useState<any>(null);
+  const [cashfree, setCashfree] = useState<CashfreeSDK | null>(null);
 
-  // 1. Fetch Payment Session
   useEffect(() => {
     const getSessionId = async () => {
       try {
@@ -19,15 +26,18 @@ function Checkout() {
           customer_phone: "+919069931799"
         });
         setSessionId(resp.data.payment_session_id);
-      } catch (error: any) {
-        console.error("Error while checkout:", error);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.error("Error while checkout:", error.message);
+        } else {
+          console.error("Unknown error while checkout");
+        }
       }
     };
 
     getSessionId();
   }, []);
 
-  // 2. Load Cashfree SDK
   useEffect(() => {
     const initializeSDK = async () => {
       const sdk = await load({ mode: "production" });
@@ -36,7 +46,6 @@ function Checkout() {
     initializeSDK();
   }, []);
 
-  // 3. Trigger payment
   const doPayment = () => {
     if (!cashfree || !sessionId) {
       alert("Payment not ready. Please wait.");
