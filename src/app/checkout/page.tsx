@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 type CashfreeSDK = {
   checkout: (options: {
     paymentSessionId: string;
-    redirectTarget: string;
+    redirectTarget?: "_self" | "_blank" | "_parent" | "_top";
   }) => void;
 };
 
