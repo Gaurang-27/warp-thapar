@@ -3,11 +3,10 @@
 import { ConfirmationResult, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { useState, useEffect, useTransition, FormEvent } from "react";
 import { auth } from '@/firebase'
-import { startTransition } from "react";
 import { FirebaseError } from "firebase/app";
 import { useRouter } from "next/navigation";
 
-export default function signin() {
+export default function Signin() {
 
     const [phone, setPhone] = useState("");
     const [otp, setOtp] = useState("");
