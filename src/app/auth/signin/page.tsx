@@ -5,6 +5,7 @@ import { useState, useEffect, useTransition, FormEvent } from "react";
 import { auth } from '@/firebase'
 import { FirebaseError } from "firebase/app";
 import { useRouter } from "next/navigation";
+import { User } from "firebase/auth";
 
 export default function Signin() {
 
@@ -96,6 +97,7 @@ export default function Signin() {
             try {
                 await confirmation?.confirm(otp);
                 router.replace('/dashboard');
+                console.log(auth.currentUser?.uid)
             } catch (err : unknown) {
                 const error = err as FirebaseError;
 
