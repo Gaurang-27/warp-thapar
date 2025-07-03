@@ -1,18 +1,29 @@
 'use client'
 import { useAuth } from '@/lib/AuthProvider'
+import { signOut } from 'firebase/auth';
+import {auth} from '@/firebase'
 
-export default function dashboard(){
+export default function Dashboard(){
 
-   const user  = useAuth();
+   const {user}  = useAuth();
    console.log(user);
     return(
 
 
         <div>
-            {!user && (
-                <p>login first</p>
+            {!user&& (
+                <div>
+                    <p>login first</p>
+                </div>
             )}
-            <p>{user?.user?.uid}</p>
+            {
+                user && (
+                    <button onClick={()=>signOut(auth)}>
+                    sign out
+                    </button>
+                )
+            }
+            <p>{user?.uid}</p>
         </div>
     )
 }
