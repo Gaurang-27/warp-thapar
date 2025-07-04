@@ -13,57 +13,33 @@ generator client {
 }
  
 model User {
-  id            String          @id @default(cuid())
+  uid           String        @id
   name          String?
-  email         String          @unique
-  emailVerified DateTime?
-  image         String?
-  phone         String          @unique
-  password      String
-  accounts      Account[]
-  sessions      Session[]
- 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  email         String?       @unique
+  phone         String        @unique
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // One-to-one relation: a user has one subscription
+  subscription  Subscription?
 }
- 
-model Account {
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
- 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
- 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
-  @@id([provider, providerAccountId])
+
+model Subscription {
+  sid        Int       @id @default(autoincrement())
+  subType    SubType
+  startDate  DateTime
+  endDate    DateTime
+
+  userId     String     @unique // ensure one subscription per user
+  user       User       @relation(fields: [userId], references: [uid])
 }
- 
-model Session {
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+enum SubType {
+  monthly
+  yearly
 }
- 
-model VerificationToken {
-  identifier String
-  token      String
-  expires    DateTime
- 
-  @@id([identifier, token])
-}
+
+
+
  
 

@@ -5,6 +5,8 @@ import { useState, useEffect, useTransition, FormEvent } from "react";
 import { auth } from '@/firebase'
 import { FirebaseError } from "firebase/app";
 import { useRouter } from "next/navigation";
+import axios from "axios";
+import { useAuth } from "@/lib/AuthProvider";
 
 export default function Signin() {
 
@@ -20,6 +22,8 @@ export default function Signin() {
     const [pending, startTransition] = useTransition();
 
     const router = useRouter()
+
+
 
 
     useEffect(() => {
@@ -46,6 +50,34 @@ export default function Signin() {
 
         return () => recaptchaverify.clear();
     }, [])
+
+    // useEffect(()=>{
+    //     if(!user || !token) return ;
+    //   async function checkUserExist(){
+    //     try {
+    //         const res = await axios.get('/api/user/user-exist' , {
+    //             headers : {
+    //                 Authorization : `Bearer ${token}`
+    //             }
+    //         })
+    //         console.log(res.data)
+    //         if(!res.data.exist){
+    //             if (user?.uid) {
+    //                 const hash = btoa(user.uid);
+    //                 console.log(hash);
+    //                 router.replace(`/auth/completeprofile?uid=${hash}`)
+    //             }
+    //         }else{
+    //             router.replace('/dashboard')
+    //         }
+    //     } catch (error) {
+    //         console.error(error);
+    //     }
+    //   }
+    //   startTransition(async ()=>{
+    //     await checkUserExist();
+    //   })
+    // },[user])
 
     const requestOtp = async (e?: FormEvent<HTMLFormElement>) => {
         e?.preventDefault();
@@ -88,15 +120,37 @@ export default function Signin() {
         })
     }
 
-    const handleSubmit = async()=>{
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 
-        startTransition(async()=>{
+        e.preventDefault();
+        startTransition(async () => {
             setErr("");
 
             try {
                 await confirmation?.confirm(otp);
-                router.replace('/dashboard');
-            } catch (err : unknown) {
+                setSuccess('Login Succesfull')
+
+                const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+                    if (firebaseUser) {
+                        const token = await firebaseUser.getIdToken();
+                        const res = await axios.get('/api/user/user-exist', {
+                            headers: {
+                                Authorization: `Bearer ${token}`
+                            }
+                        });
+
+                        if (!res.data.exist) {
+                            const hash = btoa(firebaseUser.uid);
+                            router.replace(`/auth/completeprofile?uid=${hash}`);
+                        } else {
+                            router.replace('/dashboard');
+                        }
+
+                        unsubscribe(); // stop listening
+                    }
+                });
+
+            } catch (err: unknown) {
                 const error = err as FirebaseError;
 
                 console.log(error);
@@ -127,27 +181,27 @@ export default function Signin() {
                     <div>
                         <form onSubmit={handleSubmit}>
                             <input
-                            maxLength={6}
-                            type="text"
-                            onChange={(e)=>setOtp(e.target.value)} />
+                                maxLength={6}
+                                type="text"
+                                onChange={(e) => setOtp(e.target.value)} />
                         </form>
                         <button
-                            disabled={otp.length!== 6}
-                            onClick={()=>handleSubmit()}>
+                            disabled={otp.length !== 6}
+                            onClick={(e) => handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>)}>
                             Submit
                         </button>
                     </div>
                 )
             }
             <div>
-                <button 
-                        disabled = {pending || !phone || resendTimer>0}
-                        onClick={() => requestOtp()}>
-                        Request OTP
-                    </button>
-                    {resendTimer>0 && (
-                        <p>Wait for {resendTimer} seconds to again request OTP</p>
-                    )}
+                <button
+                    disabled={pending || !phone || resendTimer > 0}
+                    onClick={() => requestOtp()}>
+                    Request OTP
+                </button>
+                {resendTimer > 0 && (
+                    <p>Wait for {resendTimer} seconds to again request OTP</p>
+                )}
             </div>
 
             {err && (
