@@ -1,12 +1,9 @@
-// app/api/auth/error/page.tsx
 'use client'
 
 import { useSearchParams } from "next/navigation"
+import { Suspense } from "react";
 
-export const dynamic = 'force-dynamic';
-
-
-export default function AuthErrorPage() {
+function ErrorMessage() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
 
@@ -22,7 +19,6 @@ export default function AuthErrorPage() {
     case "AccessDenied":
       message = "Access denied.";
       break;
-    // Add more NextAuth error types if needed
     case "Callback":
       message = "Error during callback. Please try again.";
       break;
@@ -35,5 +31,13 @@ export default function AuthErrorPage() {
       <h1 className="text-2xl font-bold">Login Error</h1>
       <p>{message}</p>
     </div>
+  );
+}
+
+export default function AuthErrorPage() {
+  return (
+    <Suspense fallback={<p className="p-4 text-gray-500">Loading error details...</p>}>
+      <ErrorMessage />
+    </Suspense>
   );
 }
