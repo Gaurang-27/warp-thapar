@@ -1,21 +1,17 @@
-'use client'
-import { signOut } from 'firebase/auth';
-import { useAuth } from '@/lib/AuthProvider';
 
-import ProtectedRoute from '@/lib/ProtectedRoute';
-import { auth } from '@/firebase';
-import { useEffect, useTransition } from 'react';
-import axios from 'axios';
-import { useRouter } from 'next/navigation';
+import { getServerSession } from 'next-auth';
+import { next_auth } from '@/lib/next_auth';
+import SignoutButton from '@/ui/SignoutButton';
 
-import LoadingIcon from '@/lib/LoadingIcon';
+export default async function Dashboard() {
 
+    const session = await getServerSession(next_auth);
 
-export default function Dashboard() {
-
-    const {user, token , checking } = useAuth();
-    const router = useRouter();
-    const [pending, startTransition] = useTransition();
+    if(!session){
+        return (
+            <div>not logged in</div>
+        )
+    }
 
     // useEffect(()=>{
     //     if(!user || !token) return ;
@@ -48,19 +44,11 @@ export default function Dashboard() {
     //if(pending) return <LoadingIcon/>
 
     return (
-        <ProtectedRoute>
-        {!pending && (
-            <div>
-            <p>{user?.uid}</p>
-            <button onClick={()=>{
-                signOut(auth);
-            }}>
-                sign out
-            </button>
+        <div>
+            <p>logged in</p>
+            <SignoutButton/>
         </div>
-        )}
-        {pending && (<LoadingIcon/>)}
-        </ProtectedRoute>
+
       
     )
 }

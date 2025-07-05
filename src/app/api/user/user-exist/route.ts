@@ -1,28 +1,32 @@
-import { verifyFirebaseAuth } from "@/lib/firebaseAuth";
+
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function GET(req : Request){
 
-    try {
-        const decodedToken = await verifyFirebaseAuth(req);
-        if (!decodedToken?.uid) {
-                return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-        }
-        const uid = decodedToken?.uid;
+    const {searchParams} = new URL(req.url);
+    const email = searchParams.get('email');
+    const phone = searchParams.get('phone');
 
-        const findUser = await prisma.user.findUnique(
+    if(!email || !phone || phone.length!==10) return NextResponse.json({error : "email and phone are required"},{status : 404})
+
+    try {
+
+        const findUser = await prisma.user.findMany(
            { where : {
-                uid : uid 
+                OR : [
+                    {email : email},
+                    {phone : phone}
+                ] 
             }}
         )
-        if(findUser){
+        if(findUser[0]){
             return NextResponse.json({exist : true})
         }
-    else{
+        else{
             return NextResponse.json({exist: false})
         }
     } catch (error) {
-        return NextResponse.json({error : 'unauthorized access'})
+        return NextResponse.json({error : 'Could Not reach database'} , {status : 400})
     }
 }

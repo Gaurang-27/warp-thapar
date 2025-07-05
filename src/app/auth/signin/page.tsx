@@ -1,221 +1,49 @@
 'use client'
 
-import { ConfirmationResult, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { useState, useEffect, useTransition, FormEvent } from "react";
-import { auth } from '@/firebase'
-import { FirebaseError } from "firebase/app";
-import { useRouter } from "next/navigation";
-import axios from "axios";
-import { useAuth } from "@/lib/AuthProvider";
+import LoadingIcon from "@/lib/LoadingIcon";
+import { signIn } from "next-auth/react"
+import { useState, useTransition } from "react"
 
-export default function Signin() {
+export default function Signin(){
 
-    const [phone, setPhone] = useState("");
-    const [otp, setOtp] = useState("");
-    const [err, setErr] = useState("");
-    const [success, setSuccess] = useState("");
-    const [resendTimer, setResendTimer] = useState(0);
+    const [cred, setCred ] = useState("");
+    const [password , setPassword] = useState("")
+    
+    const[pending, startTransition] = useTransition();
 
-    const [confirmation, setConfirmation] = useState<ConfirmationResult | null>(null);
-    const [recaptcha, setRecaptcha] = useState<RecaptchaVerifier | null>(null);
-
-    const [pending, startTransition] = useTransition();
-
-    const router = useRouter()
-
-
-
-
-    useEffect(() => {
-        let timer: NodeJS.Timeout;
-        if (resendTimer > 0) {
-            timer = setTimeout(() => {
-                setResendTimer(resendTimer - 1);
-            }, (1000));
-        }
-
-        return () => clearTimeout(timer);
-    }, [resendTimer])
-
-    useEffect(() => {
-        const recaptchaverify = new RecaptchaVerifier(
-            auth,
-            'recaptcha-container',
-            {
-                size: 'invisible',
-            }
-        )
-        setRecaptcha(recaptchaverify);
-        console.log(recaptcha);
-
-        return () => recaptchaverify.clear();
-    }, [])
-
-    // useEffect(()=>{
-    //     if(!user || !token) return ;
-    //   async function checkUserExist(){
-    //     try {
-    //         const res = await axios.get('/api/user/user-exist' , {
-    //             headers : {
-    //                 Authorization : `Bearer ${token}`
-    //             }
-    //         })
-    //         console.log(res.data)
-    //         if(!res.data.exist){
-    //             if (user?.uid) {
-    //                 const hash = btoa(user.uid);
-    //                 console.log(hash);
-    //                 router.replace(`/auth/completeprofile?uid=${hash}`)
-    //             }
-    //         }else{
-    //             router.replace('/dashboard')
-    //         }
-    //     } catch (error) {
-    //         console.error(error);
-    //     }
-    //   }
-    //   startTransition(async ()=>{
-    //     await checkUserExist();
-    //   })
-    // },[user])
-
-    const requestOtp = async (e?: FormEvent<HTMLFormElement>) => {
-        e?.preventDefault();
-        console.log(recaptcha)
-        recaptcha?.render();
-
-        setResendTimer(60);
-
-        startTransition(async () => {//pending becomes true
-            setErr("");
-
-            if (!recaptcha) {
-                return setErr("recaptcha not verified are you a robot?")
-            }
-            try {
-                const confirmationresult = await signInWithPhoneNumber(
-                    auth,
-                    phone,
-                    recaptcha
-                );
-                setConfirmation(confirmationresult);
-                setSuccess('OTP sent');
-            } catch (err) {
-                const error = err as FirebaseError;
-                console.error("Firebase OTP error:", error);
-                setResendTimer(0);
-
-                switch (error.code) {
-                    case "auth/invalid-phone-number":
-                        setErr("Invalid phone number. Please check the number.");
-                        break;
-                    case "auth/too-many-requests":
-                        setErr("Too many requests. Please try again later.");
-                        break;
-                    default:
-                        setErr("Failed to send OTP. Please try again.");
-                        break;
-                }
-            }
-        })
-    }
-
-    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-
+    const handleSubmit = async function(e : React.FormEvent<HTMLFormElement>){
+        
         e.preventDefault();
-        startTransition(async () => {
-            setErr("");
-
-            try {
-                await confirmation?.confirm(otp);
-                setSuccess('Login Succesfull')
-
-                const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
-                    if (firebaseUser) {
-                        const token = await firebaseUser.getIdToken();
-                        const res = await axios.get('/api/user/user-exist', {
-                            headers: {
-                                Authorization: `Bearer ${token}`
-                            }
-                        });
-
-                        if (!res.data.exist) {
-                            const hash = btoa(firebaseUser.uid);
-                            router.replace(`/auth/completeprofile?uid=${hash}`);
-                        } else {
-                            router.replace('/dashboard');
-                        }
-
-                        unsubscribe(); // stop listening
-                    }
-                });
-
-            } catch (err: unknown) {
-                const error = err as FirebaseError;
-
-                console.log(error);
-                setErr("failed to verify user");
-            }
+        startTransition(async ()=>{
+            signIn("credentials",{
+                callbackUrl : '/dashboard',
+                cred : cred,
+                password : password
+            })
         })
     }
-
-
-
 
     return (
         <div>
-
-            {!confirmation && (
-                <div>
-                    <form onSubmit={requestOtp}>
-                        <input
-                            type="text"
-                            disabled={pending}
-                            onChange={(e) => setPhone(e.target.value)} />
-                    </form>
-                </div>
-            )}
-
-            {
-                confirmation && (
-                    <div>
-                        <form onSubmit={handleSubmit}>
-                            <input
-                                maxLength={6}
-                                type="text"
-                                onChange={(e) => setOtp(e.target.value)} />
-                        </form>
-                        <button
-                            disabled={otp.length !== 6}
-                            onClick={(e) => handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>)}>
-                            Submit
-                        </button>
-                    </div>
-                )
-            }
-            <div>
-                <button
-                    disabled={pending || !phone || resendTimer > 0}
-                    onClick={() => requestOtp()}>
-                    Request OTP
+            <form onSubmit={handleSubmit}>
+                <input type="text"
+                    required
+                    value={cred}
+                    onChange={(e)=>setCred(e.target.value)}
+                    placeholder="Email or Phone" />
+                <input type="password" 
+                    required
+                    value={password}
+                    onChange={(e)=>setPassword(e.target.value)}
+                    placeholder="Password"/>
+                <button type="submit">
+                    Login
                 </button>
-                {resendTimer > 0 && (
-                    <p>Wait for {resendTimer} seconds to again request OTP</p>
-                )}
-            </div>
-
-            {err && (
-                <p className="text-red-600">{err}</p>
-            )}
-            {success && (
-                <p>{success}</p>
-            )}
+            </form>
 
             {pending && (
-                <p className='text-blue-600'>Loading...</p>
+                <LoadingIcon/>
             )}
-
-            <div id="recaptcha-container" />
         </div>
     )
 }

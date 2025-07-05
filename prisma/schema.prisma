@@ -13,15 +13,60 @@ generator client {
 }
  
 model User {
-  uid           String        @id
+  id            String          @id @default(cuid())
+  uid           String          @unique//from firebase
   name          String?
-  email         String?       @unique
-  phone         String        @unique
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  email         String          @unique
+  password      String
+  phone         String          @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
 
-  // One-to-one relation: a user has one subscription
-  subscription  Subscription?
+  subscription    Subscription?
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+ 
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+ 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  @@id([provider, providerAccountId])
+}
+ 
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+ 
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+ 
+  @@id([identifier, token])
 }
 
 model Subscription {
@@ -31,7 +76,7 @@ model Subscription {
   endDate    DateTime
 
   userId     String     @unique // ensure one subscription per user
-  user       User       @relation(fields: [userId], references: [uid])
+  user       User       @relation(fields: [userId], references: [id])
 }
 
 enum SubType {
