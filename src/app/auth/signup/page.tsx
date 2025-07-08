@@ -1,265 +1,263 @@
 'use client'
 
-import { ConfirmationResult, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { useState, useEffect, useTransition, FormEvent } from "react";
-import { auth } from '@/firebase'
-import { FirebaseError } from "firebase/app";
-import { useRouter } from "next/navigation";
-import axios from "axios";
-import { useAuth } from "@/lib/AuthProvider";
-import { error } from "console";
+import {
+  ConfirmationResult,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+} from 'firebase/auth';
+import { useState, useEffect, useTransition, FormEvent } from 'react';
+import { auth } from '@/firebase';
+import { FirebaseError } from 'firebase/app';
+import { useRouter } from 'next/navigation';
+import axios from 'axios';
+import { useSession } from 'next-auth/react';
 
 export default function Signup() {
 
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+  const session = useSession();
+  const router = useRouter();
 
+  
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-    const [phone, setPhone] = useState("");
-    const [otp, setOtp] = useState("");
-    const [err, setErr] = useState("");
-    const [success, setSuccess] = useState("");
-    const [resendTimer, setResendTimer] = useState(0);
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [err, setErr] = useState('');
+  const [success, setSuccess] = useState('');
+  const [resendTimer, setResendTimer] = useState(0);
 
-    const [confirmation, setConfirmation] = useState<ConfirmationResult | null>(null);
-    const [recaptcha, setRecaptcha] = useState<RecaptchaVerifier | null>(null);
+  const [confirmation, setConfirmation] =
+    useState<ConfirmationResult | null>(null);
+  const [recaptcha, setRecaptcha] = useState<RecaptchaVerifier | null>(null);
 
-    const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTransition();
+  
 
-    const router = useRouter()
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (resendTimer > 0) {
+      timer = setTimeout(() => {
+        setResendTimer(resendTimer - 1);
+      }, 1000);
+    }
 
+    return () => clearTimeout(timer);
+  }, [resendTimer]);
 
+  useEffect(() => {
 
+    if(session.status === 'authenticated') {
+    router.push('/dashboard');
+    }
+    const recaptchaverify = new RecaptchaVerifier(auth, 'recaptcha-container', {
+      size: 'invisible',
+    });
+    setRecaptcha(recaptchaverify);
 
-    useEffect(() => {
-        let timer: NodeJS.Timeout;
-        if (resendTimer > 0) {
-            timer = setTimeout(() => {
-                setResendTimer(resendTimer - 1);
-            }, (1000));
+    return () => recaptchaverify.clear();
+  }, []);
+
+  const requestOtp = async (
+    e?: FormEvent<HTMLFormElement> | React.MouseEvent
+  ) => {
+    e?.preventDefault();
+    recaptcha?.render();
+    setResendTimer(60);
+    startTransition(async () => {
+      setErr('');
+      if (!recaptcha) {
+        return setErr('Recaptcha not verified — are you a robot?');
+      }
+
+      try {
+        const res = await axios.get('/api/user/user-exist', {
+          params: { email, phone },
+        });
+
+        if (res.data.exist) {
+          setErr('User with given credentials already exists');
+          return;
         }
 
-        return () => clearTimeout(timer);
-    }, [resendTimer])
+        const confirmationresult = await signInWithPhoneNumber(
+          auth,
+          '+91' + phone,
+          recaptcha
+        );
+        setConfirmation(confirmationresult);
+        setSuccess('OTP sent');
+      } catch (err) {
+        setResendTimer(0);
+        if (axios.isAxiosError(err)) {
+          const message =
+            err.response?.data?.message ||
+            err.message ||
+            'Something went wrong.';
+          setErr(message);
+        } else if (err instanceof FirebaseError) {
+          switch (err.code) {
+            case 'auth/invalid-phone-number':
+              setErr('Invalid phone number. Please check the number.');
+              break;
+            case 'auth/too-many-requests':
+              setErr('Too many requests. Please try again later.');
+              break;
+            default:
+              setErr('Failed to send OTP. Please try again.');
+              break;
+          }
+        } else if (err instanceof Error) {
+          setErr(err.message);
+        } else {
+          setErr('An unknown error occurred.');
+        }
+      }
+    });
+  };
 
-    useEffect(() => {
-        const recaptchaverify = new RecaptchaVerifier(
-            auth,
-            'recaptcha-container',
-            {
-                size: 'invisible',
-            }
-        )
-        setRecaptcha(recaptchaverify);
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    startTransition(async () => {
+      setErr('');
 
-        return () => recaptchaverify.clear();
-    }, [])
+      try {
+        const userCredentials = await confirmation?.confirm(otp);
+        const uid = userCredentials?.user?.uid;
 
+        const res = await axios.post('/api/user/create-user', {
+          email,
+          phone,
+          password,
+          uid,
+        });
 
-    const requestOtp = async (e?: FormEvent<HTMLFormElement> | React.MouseEvent) => {
-        e?.preventDefault();
-        console.log(recaptcha)
-        recaptcha?.render();
+        setSuccess('Signup successful!');
+        router.push('/auth/signin');
+      } catch (err) {
+        setResendTimer(0);
+        if (axios.isAxiosError(err)) {
+          const message =
+            err.response?.data?.message ||
+            err.message ||
+            'Something went wrong.';
+          setErr(message);
+        } else if (err instanceof FirebaseError) {
+          switch (err.code) {
+            case 'auth/invalid-verification-code':
+              setErr('Invalid OTP. Please check and try again.');
+              break;
+            default:
+              setErr('Failed to verify OTP.');
+              break;
+          }
+        } else if (err instanceof Error) {
+          setErr(err.message);
+        } else {
+          setErr('An unknown error occurred.');
+        }
+      }
+    });
+  };
 
-        setResendTimer(60);
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-orange-50 px-4 py-12">
+      <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-md">
+        <h2 className="text-3xl font-bold text-orange-600 mb-6 text-center">
+          Sign Up
+        </h2>
 
-        startTransition(async () => {//pending becomes true
-            setErr("");
-
-            if (!recaptcha) {
-                return setErr("recaptcha not verified are you a robot?")
-            }
-            try {
-
-                //first we check if user exist with given credentials
-                const res = await axios.get('/api/user/user-exist', {
-                        params: { email, phone },
-                });
-
-                if (res.data.exist) {
-                    setErr("User with given credentials already exists");
-                    return;
-                }
-
-
-
-                const confirmationresult = await signInWithPhoneNumber(
-                    auth,
-                    '+91' + phone,
-                    recaptcha
-                );
-                setConfirmation(confirmationresult);
-                setSuccess('OTP sent');
-
-
-            } catch (err) {
-                setResendTimer(0);
-
-                if (axios.isAxiosError(err)) {
-                    // Axios error from /api/user/user-exist
-                    const message =
-                        err.response?.data?.message ||
-                        err.message ||
-                        "Something went wrong while checking user.";
-                    setErr(message);
-
-                } else if (err instanceof FirebaseError) {
-                    // Firebase OTP error
-                    console.error("Firebase OTP error:", err);
-
-                    switch (err.code) {
-                        case "auth/invalid-phone-number":
-                            setErr("Invalid phone number. Please check the number.");
-                            break;
-                        case "auth/too-many-requests":
-                            setErr("Too many requests. Please try again later.");
-                            break;
-                        default:
-                            setErr("Failed to send OTP. Please try again.");
-                            break;
-                    }
-
-                } else if (err instanceof Error) {
-                    // Any other JS error
-                    setErr(err.message);
-                } else {
-                    setErr("An unknown error occurred.");
-                }
-            }
-        })
-    }
-
-    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-
-        e.preventDefault();
-        startTransition(async () => {
-            setErr("");
-
-            try {
-                const userCredentials = await confirmation?.confirm(otp);
-                const uid = userCredentials?.user?.uid;
-
-                const res = await axios.post('/api/user/create-user',{
-                        email,phone,password,uid
-                })
-
-                setSuccess('Login Successful')
-
-            } catch (err) {
-                setResendTimer(0);
-
-                if (axios.isAxiosError(err)) {
-                    // Axios error from /api/user/user-exist
-                    const message =
-                        err.response?.data?.message ||
-                        err.message ||
-                        "Something went wrong while checking user.";
-                    setErr(message);
-
-                } else if (err instanceof FirebaseError) {
-                    // Firebase OTP error
-                    console.error("Firebase OTP error:", err);
-
-                    switch (err.code) {
-                        case "auth/invalid-phone-number":
-                            setErr("Invalid phone number. Please check the number.");
-                            break;
-                        case "auth/too-many-requests":
-                            setErr("Too many requests. Please try again later.");
-                            break;
-                        default:
-                            setErr("Failed to send OTP. Please try again.");
-                            break;
-                    }
-
-                } else if (err instanceof Error) {
-                    // Any other JS error
-                    setErr(err.message);
-                } else {
-                    setErr("An unknown error occurred.");
-                }
-            }
-        })
-    }
-
-
-
-
-    return (
-        <div>
-
-            {!confirmation && (
-                <div>
-                    <form onSubmit={requestOtp}>
-                        <input
-                            type="text"
-                            disabled={pending}
-                            onChange={(e) => setEmail(e.target.value)}
-                            value={email}
-                            required
-                            placeholder="Email" />
-                        <input
-                            type="tel"
-                            disabled={pending}
-                            onChange={(e) => setPhone(e.target.value)}
-                            value={phone}
-                            required
-                            placeholder="Phone Number"
-                            maxLength={10} />
-                        <input
-                            type="password"
-                            disabled={pending}
-                            onChange={(e) => setPassword(e.target.value)}
-                            value={password}
-                            required
-                            placeholder="Password" />
-                    </form>
-                </div>
-            )}
-
-            {
-                confirmation && (
-                    <div>
-                        <form onSubmit={handleSubmit}>
-                            <input
-                                maxLength={6}
-                                type="text"
-                                onChange={(e) => setOtp(e.target.value)}
-                                required
-                                value={otp}
-                                placeholder="OTP" />
-                        </form>
-                        <button
-                            disabled={otp.length !== 6}
-                            onClick={(e) => handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>)}>
-                            Submit
-                        </button>
-                    </div>
-                )
-            }
+        {!confirmation && (
+          <form onSubmit={requestOtp} className="space-y-4">
             <div>
-                <button
-                    disabled={pending || !phone || resendTimer > 0}
-                    onClick={(e) => requestOtp(e)}>
-                    Request OTP
-                </button>
-                {resendTimer > 0 && (
-                    <p>Wait for {resendTimer} seconds to again request OTP</p>
-                )}
+              <label className="block text-sm font-medium text-gray-700">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={pending}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                placeholder="example@email.com"
+                required
+              />
             </div>
 
-            {err && (
-                <p className="text-red-600">{err}</p>
-            )}
-            {success && (
-                <p>{success}</p>
-            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Phone
+              </label>
+              <input
+                type="tel"
+                maxLength={10}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                disabled={pending}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                placeholder="Enter 10-digit phone number"
+                required
+              />
+            </div>
 
-            {pending && (
-                <p className='text-blue-600'>Loading...</p>
-            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={pending}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                placeholder="********"
+                required
+              />
+            </div>
 
-            <div id="recaptcha-container" />
-        </div>
-    )
+            <button
+              type="submit"
+              disabled={pending || !phone || resendTimer > 0}
+              className="w-full py-2 px-4 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-md transition disabled:opacity-50"
+            >
+              {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : 'Request OTP'}
+            </button>
+          </form>
+        )}
+
+        {confirmation && (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mt-4">
+                Enter OTP
+              </label>
+              <input
+                type="text"
+                maxLength={6}
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                placeholder="Enter 6-digit OTP"
+                required
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={otp.length !== 6 || pending}
+              className="w-full py-2 px-4 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-md transition disabled:opacity-50"
+            >
+              Submit OTP
+            </button>
+          </form>
+        )}
+
+        {err && <p className="mt-4 text-sm text-red-600">{err}</p>}
+        {success && <p className="mt-4 text-sm text-green-600">{success}</p>}
+        {pending && <p className="mt-2 text-sm text-blue-600">Loading...</p>}
+
+        <div id="recaptcha-container" />
+      </div>
+    </div>
+  );
 }

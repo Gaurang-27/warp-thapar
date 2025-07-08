@@ -21,10 +21,12 @@ model User {
   phone         String          @unique
   emailVerified DateTime?
   image         String?
+  trialAvailable      Boolean     @default(true)
   accounts      Account[]
   sessions      Session[]
 
   subscription    Subscription?
+  payments        Payments[]
  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -72,16 +74,32 @@ model VerificationToken {
 model Subscription {
   sid        Int       @id @default(autoincrement())
   subType    SubType
-  startDate  DateTime
-  endDate    DateTime
+  startDate  DateTime?
+  endDate    DateTime?
+  activated   Boolean   @default(false)
 
   userId     String     @unique // ensure one subscription per user
   user       User       @relation(fields: [userId], references: [id])
 }
 
+model Payments {
+  order_id         String   @id // Cashfree's order_id
+  order_amount     Int
+
+  cf_payment_id    String   @unique 
+  payment_status   String
+  payment_time     DateTime
+
+  customer_id      String
+  payment_message  String?     // helpful for failed payments
+
+  user             User     @relation(fields: [customer_id], references: [id])
+}
+
 enum SubType {
   monthly
-  yearly
+  quaterly
+  trial
 }
 
 

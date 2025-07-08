@@ -38,7 +38,8 @@ export const next_auth : NextAuthOptions =  {
                 return {
                     id : userExist[0].id,
                     email : userExist[0].email,
-                    phone : userExist[0].phone
+                    phone : userExist[0].phone,
+                    trialAvailable : userExist[0].trialAvailable
                 }
 
                 //return null;
@@ -53,6 +54,29 @@ export const next_auth : NextAuthOptions =  {
     pages :{
         signIn : '/auth/signin',
         error : '/auth/error'
+    },
+    callbacks :{
+        async jwt({token , user}){
+            if(user){
+                token.user_id = user.id;
+                token.phoneNo = user.phone;
+                token.trialAvail = user.trialAvailable
+            }
+            return token;
+        },
+        async session({session,token}){
+            if(token?.user_id){
+                const id  = token.user_id;
+                session.user.id = id;
+            }
+            if(token?.phoneNo){
+                session.user.phone = token.phoneNo;
+            }
+            if(token?.trialAvail){
+                session.user.trialAvailable = token.trialAvail
+            }
+            return session;
+        },
     },
     secret : process.env.NEXTAUTH_SECRET,
 

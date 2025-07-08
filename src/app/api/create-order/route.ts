@@ -16,11 +16,11 @@ export async function POST(req: NextRequest) {
 
   try {
     const resp = await axios.post(
-      "https://api.cashfree.com/pg/orders",
+      `https://${process.env.CASHFREE_MODE}.cashfree.com/pg/orders`,
       {
         order_meta: {
-          return_url: "https://youtube.com",
-          notify_url: "https://webhook.site/2b09f118-7269-4140-a9f4-a851f50878cf",
+          return_url: `${process.env.BASE_URL}/dashboard/transactions`,
+          notify_url: `${process.env.BASE_URL}/api/webhook/listen`,
         },
         order_id: orderId,
         order_amount: order_amount,
