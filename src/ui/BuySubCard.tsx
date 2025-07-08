@@ -5,7 +5,7 @@ import CheckoutButton from "./CheckoutButton";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 
-export default function BuySubCard({activated} :{activated : boolean}) {
+export default function BuySubCard({activated , exist} :{activated : boolean,exist:boolean}) {
   const router = useRouter();
   const session = useSession();
 
@@ -39,10 +39,10 @@ export default function BuySubCard({activated} :{activated : boolean}) {
               <div className="text-lg md:text-xl font-medium text-gray-800">
                 📦 {item.month} Month Plan — <span className="text-orange-600 font-bold">₹{item.price}</span>
               </div>
-              <CheckoutButton price={item.price} subType={item.subType} activated={activated} />
+              <CheckoutButton price={item.price} subType={item.subType} activated={activated} exist={exist} />
             </div>
           ))}
-          {!activated && (
+          {!activated && exist && (
             <div>Please wait for your account activation , then you can buy</div>
           )}
         </div>

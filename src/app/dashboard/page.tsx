@@ -63,7 +63,7 @@ export default async function Dashboard() {
       {/* Subscription + Buy Cards */}
       <div className="flex flex-col md:flex-row md:space-x-6 space-y-6 md:space-y-0">
         <SubDetailsCard subDetails={subDetails} />
-        <BuySubCard activated={subDetails.activated} />
+        <BuySubCard activated={subDetails.activated} exist={subDetails.exist} />
       </div>
 
       {/* User Details Card */}
