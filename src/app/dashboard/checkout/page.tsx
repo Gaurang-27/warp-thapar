@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import CheckoutButton from "@/ui/CheckoutButton";
 import { useSession } from "next-auth/react";
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, Suspense } from "react";
 import { load } from "@cashfreepayments/cashfree-js";
 import axios from "axios";
 import LoadingIcon from "@/lib/LoadingIcon";
@@ -15,7 +15,7 @@ type CashfreeSDK = {
   }) => void;
 };
 
-export default function Checkout() {
+function CheckoutContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
 
@@ -73,10 +73,9 @@ export default function Checkout() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-6 py-12 space-y-8">
-      
       <div className="bg-white shadow-md rounded-xl p-6 md:p-10 max-w-xl w-full border border-orange-200">
         <h1 className="text-red-600 font-medium text-lg mb-4">
-          ⚠️ If your current plan has ended (trial or paid), activation may take up to 24 hours.You will receive an email once your account gets activated
+          ⚠️ If your current plan has ended (trial or paid), activation may take up to 24 hours. You will receive an email once your account gets activated.
         </h1>
 
         <h2 className="text-4xl font-bold text-orange-600 mb-6">Checkout</h2>
@@ -97,7 +96,7 @@ export default function Checkout() {
           disabled={pending || !price || !subType}
           className="mt-6 w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-md transition disabled:opacity-50"
         >
-           Pay Now
+          Pay Now
         </button>
 
         {pending && (
@@ -111,5 +110,13 @@ export default function Checkout() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<div className="text-center text-gray-500 py-10">Loading checkout...</div>}>
+      <CheckoutContent />
+    </Suspense>
   );
 }
