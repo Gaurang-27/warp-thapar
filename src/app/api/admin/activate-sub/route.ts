@@ -47,12 +47,11 @@ export async function POST(req: Request) {
             userId: id
         }
     })
-    if(add==1){
         const removeTrial = await prisma.user.update({
             data : {trialAvailable : false},
             where : {id : id}
         })
-    }
+
 
     if(!activate) return NextResponse.json({error : "error at database end"}, {status : 400});
 

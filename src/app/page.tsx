@@ -7,7 +7,7 @@ export default async function Home() {
   const session = await getServerSession(next_auth);
 
   // Uncomment to redirect if already logged in
-  // if (session) redirect('/dashboard');
+  if (session) redirect('/dashboard');
 
   return (
     <main className="relative min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4 py-8">
