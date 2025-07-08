@@ -18,7 +18,7 @@ export default async function Dashboard() {
   const session = await getServerSession(next_auth);
 
   let err = "";
-  let subDetails: subDetailsType = { exist: false, activated: false };
+  let subDetails: subDetailsType = { exist: false, activated: true };
 
   if (!session) {
     return (
