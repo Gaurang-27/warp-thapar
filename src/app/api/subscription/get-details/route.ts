@@ -30,8 +30,8 @@ export async function GET(req : Request){
 
     return NextResponse.json({
         exist : true, 
-        startDate: subDetail.startDate!!.toISOString(),
-        endDate : subDetail.endDate!!.toISOString(),
+        startDate: subDetail.startDate?.toISOString(),
+        endDate : subDetail.endDate?.toISOString(),
         SubType : SubType,
         activated : subDetail.activated
         })

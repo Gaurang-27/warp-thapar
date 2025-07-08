@@ -33,7 +33,7 @@ export default async function Home() {
             </Link>
           </div>
           <div>
-            <h3 className="text-md sm:text-xl">Don't have an account?</h3>
+            <h3 className="text-md sm:text-xl">Do not have an account?</h3>
             <Link
               href="/auth/signup"
               className="mt-2 inline-block bg-blue-500 text-white text-2xl sm:text-2xl font-semibold py-3 px-6 rounded-xl hover:bg-blue-600 transition sm:min-w-14"

@@ -48,7 +48,7 @@ export default function Trial() {
           Activation may take up to <span className="font-semibold">24 hours</span>.
         </p>
         <p className="text-gray-700 text-lg">
-          You'll receive an email when your account is activated. Your one-day trial will start from that moment.
+          You will receive an email when your account is activated. Your one-day trial will start from that moment.
         </p>
         <p className="text-gray-600 text-base">
           📘 Need help? Follow the guide below to learn how to login into your Warp account.
