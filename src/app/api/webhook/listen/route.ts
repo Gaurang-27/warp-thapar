@@ -37,8 +37,15 @@ export async function POST(req : Request){
     if(data.payment?.payment_status === "SUCCESS"){
         const subType = (data.order?.order_amount === 60)?'monthly':'quaterly';
 
+        
         try {
 
+            const res = await axios.post(`${process.env.BASE_URL}/api/subscription/create-sub`,{
+                id : data.customer_details?.customer_id,
+                subType : subType,
+                email : data.customer_details?.customer_email
+            })
+            
             //mailing logic first so that user is assured payment has reached
             const transporter = nodemailer.createTransport({
                     service: 'gmail',
@@ -67,15 +74,8 @@ export async function POST(req : Request){
                 })
 
 
-
-
-            const res = await axios.post(`${process.env.BASE_URL}/api/subscription/create-sub`,{
-                id : data.customer_details?.customer_id,
-                subType : subType,
-                email : data.customer_details?.customer_email
-            })
-
             return NextResponse.json({message : res?.data?.message})
+            
         } catch (error : unknown) {
             if(axios.isAxiosError(error)){
                 const message = error.response?.data?.error || error.message || "unknown error"
