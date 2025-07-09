@@ -18,6 +18,7 @@ export default function Trial() {
         const res = await axios.post('/api/subscription/create-sub', {
           id: session?.user.id,
           subType: 'trial',
+          email : session?.user.email
         });
 
         setSuccess(

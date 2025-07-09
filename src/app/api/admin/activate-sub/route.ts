@@ -1,18 +1,21 @@
 import { NextResponse } from "next/server";
 import { prisma } from '@/lib/prisma'
-import { error } from "console";
+import { cookies } from "next/headers";
+import nodemailer from 'nodemailer'
 
 //activate will only be needed when user is subscribing for first time
 //or his previous subscription has ended so his entry from db is removed
 export async function POST(req: Request) {
 
     const body = await req.json();
-    const { pass, id } = body;
+    const { id, email } = body;
 
-    if (!pass || pass != process.env.ADMIN_PASS) {
-        return NextResponse.json({ error: "unauthorized access" }, { status: 400 });
-    }
-    if (!id) return NextResponse.json({ error: 'no userid found' }, { status: 404 });
+    const cookiestore = await cookies();
+    const adminToken = cookiestore.get('admin-token')?.value
+
+    if (adminToken !== 'true') return NextResponse.json({ error: 'unauthorized acces' }, { status: 400 })
+
+    if (!id || !email) return NextResponse.json({ error: 'no userid found or no email found' }, { status: 404 });
 
 
     const findSub = await prisma.subscription.findUnique({
@@ -22,7 +25,7 @@ export async function POST(req: Request) {
     })
     if (!findSub) return NextResponse.json({ error: 'no subscription running in this name' }, { status: 400 });
 
-    if(findSub.activated) return NextResponse.json({error : "already activated"},{status : 402});
+    if (findSub.activated) return NextResponse.json({ error: "already activated" }, { status: 402 });
 
     let startDate = new Date();
     let endDate = new Date();
@@ -31,31 +34,55 @@ export async function POST(req: Request) {
     //     endDate = findSub.endDate;
     // }
     const add = (findSub.subType === 'monthly')
-                ? 30
-                : (findSub.subType === 'quaterly')
-                    ? 120
-                    : 1;
+        ? 30
+        : (findSub.subType === 'quaterly')
+            ? 120
+            : 1;
     endDate.setDate(endDate.getDate() + add);
 
     const activate = await prisma.subscription.update({
         data: {
             activated: true,
-            startDate : startDate,
-            endDate : endDate
+            startDate: startDate,
+            endDate: endDate
         },
         where: {
             userId: id
         }
     })
+    if (add == 1) {
         const removeTrial = await prisma.user.update({
-            data : {trialAvailable : false},
-            where : {id : id}
+            data: { trialAvailable: false },
+            where: { id: id }
         })
+    }
 
-
-    if(!activate) return NextResponse.json({error : "error at database end"}, {status : 400});
+    if (!activate) return NextResponse.json({ error: "error at database end" }, { status: 400 });
 
     //mailing logic will come here
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL,
+            pass: process.env.EMAIL_PASS
+        },
+    })
+    const info = await transporter.sendMail({
+        from: process.env.EMAIL,
+        to: email,
+        subject: 'Activation of your subscription',
+        text: `Your subscription is now active.\n\nGo to https://warp-thapar.vercel.app to manage it.`,
+        html: `
+            <p>Hey there,</p>
+            <p>Your subscription is now <strong>activated</strong>. You can use warp now.</p>
+            <p>
+            You can manage your subscription 
+            <a href="https://warp-thapar.vercel.app" target="_blank" rel="noopener noreferrer" style="color: #0070f3;">here</a>.
+            </p>
+            <br>
+            <p>Thanks</p>
+        `,
+    })
 
-    return NextResponse.json({message : "subscription activated"})
+    return NextResponse.json({ message: "subscription activated", info })
 }

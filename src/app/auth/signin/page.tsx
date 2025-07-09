@@ -1,15 +1,31 @@
 'use client'
 
 import LoadingIcon from "@/lib/LoadingIcon";
-import { signIn } from "next-auth/react";
-import { useState, useTransition } from "react";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useState, useTransition,useEffect } from "react";
 
 export default function Signin() {
   const [cred, setCred] = useState("");
   const [password, setPassword] = useState("");
   const [pending, startTransition] = useTransition();
+  const { data: session, status } = useSession()
+  const router = useRouter()
+
+
+  useEffect(() => {
+      if (status === 'authenticated') {
+        router.push('/dashboard');
+      }
+    }, [status]);
+
 
   const handleSubmit = async function (e: React.FormEvent<HTMLFormElement>) {
+
+    if(status === 'authenticated'){
+      alert("already logged in");
+      return;
+    }
     e.preventDefault();
     startTransition(async () => {
       await signIn("credentials", {

@@ -14,10 +14,11 @@ import { useSession } from 'next-auth/react';
 
 export default function Signup() {
 
-  const session = useSession();
+  const { data: session, status } = useSession()
+
   const router = useRouter();
 
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -32,7 +33,7 @@ export default function Signup() {
   const [recaptcha, setRecaptcha] = useState<RecaptchaVerifier | null>(null);
 
   const [pending, startTransition] = useTransition();
-  
+
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -46,9 +47,15 @@ export default function Signup() {
   }, [resendTimer]);
 
   useEffect(() => {
+    if (status === 'authenticated') {
+      router.push('/dashboard');
+    }
+  }, [status]);
 
-    if(session.status === 'authenticated') {
-    router.push('/dashboard');
+  useEffect(() => {
+
+    if (status === 'authenticated') {
+      router.push('/dashboard');
     }
     const recaptchaverify = new RecaptchaVerifier(auth, 'recaptcha-container', {
       size: 'invisible',
