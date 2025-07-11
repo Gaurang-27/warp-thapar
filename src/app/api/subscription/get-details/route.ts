@@ -1,10 +1,15 @@
+import { next_auth } from '@/lib/next_auth';
 import {prisma} from '@/lib/prisma'
 import { SubType } from '@prisma/client';
-import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(req : Request){
+export async function GET(req : NextRequest){
 
-    //not protected yet
+    // const session = await getServerSession({ req, ...next_auth });
+    //   if(!session){
+    //     return NextResponse.json({error : "unauthorized acces"}, {status : 400});
+    //   }
 
     const {searchParams} = new URL(req.url);
     const id = searchParams.get('id');

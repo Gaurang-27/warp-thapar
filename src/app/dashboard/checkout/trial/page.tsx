@@ -41,7 +41,7 @@ export default function Trial() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-6 py-10 space-y-8">
+    <div className="min-h-screen bg-orange-50 flex flex-col items-center justify-center px-6 py-10 space-y-8">
       {/* Headings */}
       <div className="space-y-4 text-center max-w-2xl">
         <h1 className="text-4xl md:text-5xl font-bold text-orange-600">🚀 Claim Your Free Trial</h1>

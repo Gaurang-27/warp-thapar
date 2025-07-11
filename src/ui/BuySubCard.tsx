@@ -11,7 +11,7 @@ export default function BuySubCard({activated , exist} :{activated : boolean,exi
 
   return (
     <div className="w-full md:w-1/2 p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 border border-orange-300 flex flex-col space-y-12 md:items-start items-center transition-all duration-300">
+      <div className="bg-orange-50 rounded-2xl shadow-xl p-8 md:p-12 border border-orange-300 flex flex-col space-y-12 md:items-start items-center transition-all duration-300">
         
         {/* Trial Section */}
         <div className="text-center md:text-left space-y-5 w-full">

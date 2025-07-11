@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma"
-import { error } from "console";
 import nodemailer from 'nodemailer'
+import { getServerSession } from "next-auth";
+import { next_auth } from "@/lib/next_auth";
 
-//this will be called when webhook OR new sub entry
+
+//this will be called when webhook OR trial
 export async function POST(req: Request) {
 
-    //route protection logic comes here
-
     const body = await req.json();
-    const { id, subType ,email} = body;
+    const { id, subType ,email , webhook_key} = body;
 
     if (!id || !subType || !email) return NextResponse.json({ error: "id and subType and email required" }, { status: 404 })
 
@@ -25,8 +25,13 @@ export async function POST(req: Request) {
     if (subType == 'trial') {
         if (!trialValid?.trialAvailable) return NextResponse.json({ error: 'user has already redeemed trial' }, { status: 400 })
     }
+    
 
-
+    //we donot need to check the autheniticity of payment in trial 
+    //webhook_key is for authenticity of payments
+    if((!webhook_key || webhook_key!==process.env.WEBHOOK_KEY) && subType!=='trial'){
+        return NextResponse.json({error : "malicious user detected"},{status : 400});
+    }
 
     //subscription already exists so we will extend the end date
     if (currentSub) {

@@ -1,11 +1,21 @@
 import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
+//import subscriptions from "@/lib/subscriptions";
+import { getServerSession } from "next-auth";
+import { next_auth } from "@/lib/next_auth";
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { customer_id, customer_email, customer_phone, order_amount } = body;
 
-  if (!customer_email || !customer_id || !customer_phone || !order_amount) {
+  // const session = await getServerSession(next_auth);
+  // if(!session){
+  //   return NextResponse.json({error : "unauthorized acces"}, {status : 400});
+  // }
+  //vulnerable endpoint
+
+  const body = await req.json();
+  const { customer_id, customer_email, customer_phone, subType } = body;
+
+  if (!customer_email || !customer_id || !customer_phone || !subType) {
     return NextResponse.json(
       { error: "Please provide all required details" },
       { status: 400 }
@@ -13,6 +23,11 @@ export async function POST(req: NextRequest) {
   }
 
   const orderId = "order_" + Date.now();
+  if(subType!=='monthly' && subType!=='quaterly'){
+    return NextResponse.json({error : 'invalid product'},{status : 400});
+  }
+
+  const order_amount = (subType === 'monthly')?60:120;
 
   try {
     const resp = await axios.post(

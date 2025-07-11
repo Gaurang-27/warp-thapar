@@ -16,7 +16,7 @@ export default function CheckoutButton({
   const router = useRouter();
 
   const handleClick = (e: React.MouseEvent) => {
-    router.push(`/dashboard/checkout?price=${price}&subType=${subType}`);
+    router.push(`/dashboard/checkout/?subType=${subType}`);
   };
 
   return (

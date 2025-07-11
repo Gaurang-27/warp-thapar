@@ -7,7 +7,7 @@ export default async function CustomerDetailCard() {
 
   return (
     <div className="w-full md:w-full p-4">
-      <div className="bg-white rounded-2xl shadow-lg p-6 md:p-10 border border-orange-300 space-y-6">
+      <div className="bg-orange-100 rounded-2xl shadow-lg p-6 md:p-10 border border-orange-300 space-y-6">
         <h1 className="text-4xl font-bold text-orange-600">👤 User Details</h1>
 
         <div className="space-y-2 text-lg text-gray-800">

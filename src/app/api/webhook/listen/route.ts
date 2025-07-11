@@ -43,7 +43,8 @@ export async function POST(req : Request){
             const res = await axios.post(`${process.env.BASE_URL}/api/subscription/create-sub`,{
                 id : data.customer_details?.customer_id,
                 subType : subType,
-                email : data.customer_details?.customer_email
+                email : data.customer_details?.customer_email,
+                webhook_key : process.env.WEBHOOK_KEY
             })
             
             //mailing logic first so that user is assured payment has reached

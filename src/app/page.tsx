@@ -10,7 +10,7 @@ export default async function Home() {
   if (session) redirect('/dashboard');
 
   return (
-    <main className="relative min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4 py-8">
+    <main className="relative min-h-screen flex flex-col items-center justify-center bg-orange-50 px-4 py-8">
       {/* Main Container */}
       <div className="flex flex-col md:flex-row items-center gap-20 max-w-5xl w-full">
 
@@ -27,7 +27,7 @@ export default async function Home() {
             <h3 className="text-md sm:text-xl">Already have an Account?</h3>
             <Link
               href="/auth/signin"
-              className="mt-2 inline-block bg-blue-500 text-white text-2xl sm:text-2xl font-semibold py-3 px-6 rounded-xl hover:bg-blue-600 transition min-w-30"
+              className="mt-2 inline-block bg-amber-500 text-white text-2xl sm:text-2xl font-semibold py-3 px-6 rounded-xl hover:bg-amber-600 transition min-w-30"
             >
               Sign In
             </Link>
@@ -36,7 +36,7 @@ export default async function Home() {
             <h3 className="text-md sm:text-xl">Do not have an account?</h3>
             <Link
               href="/auth/signup"
-              className="mt-2 inline-block bg-blue-500 text-white text-2xl sm:text-2xl font-semibold py-3 px-6 rounded-xl hover:bg-blue-600 transition sm:min-w-14"
+              className="mt-2 inline-block bg-amber-500 text-white text-2xl sm:text-2xl font-semibold py-3 px-6 rounded-xl hover:bg-amber-600 transition sm:min-w-14"
             >
               Sign Up
             </Link>

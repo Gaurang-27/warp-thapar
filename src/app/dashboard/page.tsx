@@ -34,6 +34,10 @@ export default async function Dashboard() {
       {
         method: 'GET',
         cache: 'no-store',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
       }
     );
 
@@ -54,7 +58,7 @@ export default async function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8">
+    <div className="min-h-screen bg-orange-50 px-4 py-8">
       {/* Header */}
       <h1 className="text-5xl md:text-6xl text-center font-bold text-orange-500 md:text-left mb-12 md:pl-7">
         Warp @ Thapar
