@@ -4,6 +4,7 @@ import LoadingIcon from "@/lib/LoadingIcon";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition,useEffect } from "react";
+import Link from "next/link";
 
 export default function Signin() {
   const [cred, setCred] = useState("");
@@ -72,6 +73,8 @@ export default function Signin() {
             />
           </div>
 
+          
+
           <button
             type="submit"
             className="w-full py-2 px-4 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-md transition disabled:opacity-50"
@@ -80,6 +83,8 @@ export default function Signin() {
             {pending ? "Logging in..." : "Login"}
           </button>
         </form>
+
+        <div className="mt-2"><Link href={'/auth/forgot-password'} className="text-orange-600">Forgot Password?</Link></div>
 
         {pending && (
           <div className="mt-4 flex justify-center">

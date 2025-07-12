@@ -32,7 +32,7 @@ export default function RootLayout({
      <Providers>
            <html lang="en">
       <body
-        className={`${montserrat.className} ${geistMono.variable} antialiased bg-orange-200`}
+        className={`${montserrat.className} ${geistMono.variable} antialiased bg-orange-50`}
       >
         {children}
       </body>
