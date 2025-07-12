@@ -10,8 +10,13 @@ interface PageProps {
   };
 }
 
-export default function Change({ searchParams }: PageProps) {
-  const { token, expires, email } = searchParams;
+export default async function Change({
+  params,searchParams
+}: {
+ params: Promise <{params:string}>
+  searchParams: Promise<{ [key: string]: string  | undefined }>
+}) {
+  const { token, expires, email } = await searchParams;
 
   if (!token || !expires || !email) {
     return (
