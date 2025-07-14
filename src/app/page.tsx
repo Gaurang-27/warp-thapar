@@ -6,7 +6,6 @@ import Link from "next/link";
 export default async function Home() {
   const session = await getServerSession(next_auth);
 
-  // Uncomment to redirect if already logged in
   if (session) redirect('/dashboard');
 
   return (
@@ -22,7 +21,7 @@ export default async function Home() {
         </div>
 
         {/* Auth Section */}
-        <div className="md:flex-1 flex flex-col gap-6 w-full max-w-sm text-center md:text-left md:pl-6">
+        <div className="md:flex-1 flex flex-col gap-6 w-full max-w-sm text-center md:text-left md:pl-6 ">
           <div>
             <h3 className="text-md sm:text-xl">Already have an Account?</h3>
             <Link
@@ -46,8 +45,7 @@ export default async function Home() {
 
       {/* Contact Section */}
       <div className="absolute bottom-4 right-4 text-xs sm:text-sm text-gray-600 text-right">
-        <p>📞 +91 9069931799</p>
-        <p>✉️ gaurangg272@gmail.com</p>
+        <Link href={'/help'} className="mt-2 inline-block  text-orange-500 text-lg font-semibold py-3 px-6 rounded-lg hover:bg-orange-100 transition sm:min-w-14 underline">Need help?</Link>
       </div>
     </main>
   );

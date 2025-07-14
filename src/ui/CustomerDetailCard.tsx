@@ -22,10 +22,10 @@ export default async function CustomerDetailCard() {
         </div>
 
         <Link
-          href="/dashboard/update-details"
+          href="/dashboard/change-password"
           className="inline-block mt-4 text-white bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded-md font-medium transition"
         >
-          ✏️ Update User Details
+          Change Password
         </Link>
       </div>
     </div>

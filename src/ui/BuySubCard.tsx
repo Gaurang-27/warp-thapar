@@ -4,6 +4,7 @@ import subscriptions from "@/lib/subscriptions";
 import CheckoutButton from "./CheckoutButton";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 export default function BuySubCard({activated , exist} :{activated : boolean,exist:boolean}) {
   const router = useRouter();
@@ -45,7 +46,10 @@ export default function BuySubCard({activated , exist} :{activated : boolean,exi
           {!activated && exist && (
             <div>Please wait for your account activation , then you can buy</div>
           )}
+          <Link href={'/help'} className=" hover:bg-orange-100 p-2 rounded-lg text-orange-600 underline font-bold ">How to Setup Warp?</Link>
         </div>
+
+        
 
       </div>
     </div>

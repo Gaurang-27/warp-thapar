@@ -33,7 +33,7 @@ export default async function Activated(){
 
             console.log(getDetails)
         if(getDetails.length === 0 ) return (
-            <div>No active subscriptions</div>
+            <div>No non-active subscriptions</div>
         )
 
         return(
