@@ -76,6 +76,10 @@ export default function Signup() {
       if (!recaptcha) {
         return setErr('Recaptcha not verified — are you a robot?');
       }
+      if(password.length<6){
+        alert("password needs to be atleast 6 characters");
+        return;
+      }
 
       try {
         const res = await axios.get('/api/user/user-exist', {

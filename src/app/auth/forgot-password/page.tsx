@@ -57,6 +57,8 @@ export default function ForgotPassword() {
         </button>
       </form>
 
+      <div className="mt-4 text-orange-500 text-center">Email may take upto 5 minutes to arrive</div>
+
       {success && (
         <div className="mt-4 text-green-600 text-center font-medium">{success}</div>
       )}
