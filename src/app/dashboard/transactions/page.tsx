@@ -16,7 +16,7 @@ export default async function Transactions() {
       where: {
         customer_id: session.user.id,
       },
-      orderBy: { payment_time: 'asc' }
+      orderBy: { payment_time: 'desc' }
     });
 
     return (
