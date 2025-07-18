@@ -41,7 +41,7 @@ export default async function Activated(){
 
                 {getDetails.map((element,idx)=>(
                     <div key={idx}>
-                        <AdminSubCard element={element}/>
+                        <AdminSubCard element={element} />
                     </div>
                 ))}
             </div>
