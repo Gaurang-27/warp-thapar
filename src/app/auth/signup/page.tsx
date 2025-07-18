@@ -74,10 +74,12 @@ export default function Signup() {
     startTransition(async () => {
       setErr('');
       if (!recaptcha) {
-        return setErr('Recaptcha not verified — are you a robot?');
+        return setErr('Recaptcha not verified — are you a robot?...please reload');
+        //setResendTimer(0);
       }
       if(password.length<6){
         alert("password needs to be atleast 6 characters");
+        setResendTimer(0);
         return;
       }
 
